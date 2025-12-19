@@ -4,6 +4,7 @@ from rest_framework import permissions, status
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView
 
+from .authentication import CookieJWTAuthentication
 from .serializers import RegisterSerializer, LoginSerializer
 from .utils import set_auth_cookies, get_tokens_for_user
 
@@ -50,6 +51,7 @@ class LoginAPIView(APIView):
             return response
 
 class LogoutAPIView(APIView):
+    authentication_classes = [CookieJWTAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):

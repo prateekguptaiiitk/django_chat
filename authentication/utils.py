@@ -8,12 +8,29 @@ def get_tokens_for_user(user):
     }
 
 def set_auth_cookies(response, access, refresh=None):
+    # response.set_cookie(
+    #     key='access',
+    #     value=access,
+    #     httponly=True,
+    #     secure=True,
+    #     samesite='Lax'
+    # )
+    #
+    # if refresh:
+    #     response.set_cookie(
+    #         key='refresh',
+    #         value=refresh,
+    #         httponly=True,
+    #         secure=True,
+    #         samesite='Strict'
+    #     )
+
     response.set_cookie(
         key='access',
         value=access,
         httponly=True,
         secure=True,
-        samesite='Lax'
+        samesite='None'
     )
 
     if refresh:
@@ -22,5 +39,5 @@ def set_auth_cookies(response, access, refresh=None):
             value=refresh,
             httponly=True,
             secure=True,
-            samesite='Strict'
+            samesite='None'
         )

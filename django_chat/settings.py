@@ -24,6 +24,21 @@ SECRET_KEY = 'django-insecure-3cm0ok+1_7)67ijla7@8^zb+713%cp-+)pyxa!=ly^05abffer
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+# If DEBUG is true Access-Control-Allow-Origin will be added to headers in response
+CORS_ORIGIN_ALLOW_ALL = DEBUG
+CORS_ALLOW_CREDENTIALS = DEBUG
+
+# # Required for cross-origin cookies (React ↔ Django)
+# SESSION_COOKIE_SAMESITE = 'None'
+# CSRF_COOKIE_SAMESITE = 'None'
+#
+# SESSION_COOKIE_SECURE = False   # True only on HTTPS
+# CSRF_COOKIE_SECURE = False
+#
+# CSRF_TRUSTED_ORIGINS = [
+#     "http://localhost:5173",
+# ]
+
 ALLOWED_HOSTS = []
 
 # Application definition
@@ -40,9 +55,11 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',  #
     'chat',
     'authentication',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",  # Bypass CORS issue during development
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
