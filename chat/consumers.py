@@ -9,24 +9,25 @@ from asgiref.sync import sync_to_async
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        user = self.scope["user"]
+        self.room_name = self.scope["url_route"]["kwargs"].get("room_name")
+        self.room_group_name = f"chat_{self.room_name}"
 
-        if not user or user.is_anonymous:
+        user = self.scope["user"]
+        if not user or user.is_anonymous or not self.room_name:
             await self.close()
             return
 
-        self.room_name = self.scope['url_route']['kwargs']['room_name']
-        user1 = user.username
-        user2 = self.room_name
-        self.room_group_name = f"chat_{''.join(sorted([user1, user2]))}"
-
-        # Join room group
-        await self.channel_layer.group_add(self.room_group_name, self.channel_name)
+        await self.channel_layer.group_add(
+            self.room_group_name, self.channel_name
+        )
         await self.accept()
 
     async def disconnect(self, close_code):
         # Leave room group
-        await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
+        if hasattr(self, "room_group_name"):
+            await self.channel_layer.group_discard(
+                self.room_group_name, self.channel_name
+            )
 
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)

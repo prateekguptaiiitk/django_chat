@@ -5,7 +5,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView
 
 from .authentication import CookieJWTAuthentication
-from .serializers import RegisterSerializer, LoginSerializer
+from .serializers import RegisterSerializer, LoginSerializer, ProfileSerializer
 from .utils import set_auth_cookies, get_tokens_for_user
 
 
@@ -21,7 +21,7 @@ class RegisterAPIView(APIView):
         tokens = get_tokens_for_user(user)
 
         response = Response(
-            {"message": "User registered successfully"},
+            {"message": "User registered successfully", "id": user.id},
             status=status.HTTP_201_CREATED
         )
 
@@ -42,7 +42,7 @@ class LoginAPIView(APIView):
             user = serializer.validated_data['user']
             tokens = get_tokens_for_user(user)
 
-            response = Response({"message": "Login successful"})
+            response = Response({"message": "Login successful", "id": user.id})
             set_auth_cookies(
                 response,
                 access=str(tokens['access']),
@@ -64,6 +64,16 @@ class LogoutAPIView(APIView):
         response.delete_cookie('refresh')
         return response
 
+class ProfileAPIView(APIView):
+    authentication_classes = [CookieJWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        serializer = ProfileSerializer(instance=request.user)
+
+        return Response({
+            "user": serializer.data,
+        })
 
 class CookieTokenRefreshView(TokenRefreshView):
     permission_classes = [permissions.AllowAny]

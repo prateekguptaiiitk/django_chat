@@ -1,4 +1,6 @@
 from django.contrib.auth.models import User
+from django.db.models import Q
+from django.shortcuts import get_object_or_404
 from rest_framework import mixins, generics, permissions
 
 from authentication.authentication import CookieJWTAuthentication
@@ -25,14 +27,17 @@ class MessageList(mixins.ListModelMixin, generics.GenericAPIView):
 
     def get_queryset(self):
         username = self.kwargs['username']
-        user = User.objects.get(username=username)
+        user = get_object_or_404(User, username=username)
+        our_user = self.request.user
 
-        # Example: messages where user is sender OR receiver
+        if user == our_user:
+            return Message.objects.none()
+
+        print('user', user, 'our_user', our_user)
         return Message.objects.filter(
-            sender=user
-        ) | Message.objects.filter(
-            recipient=user
-        )
+            Q(sender=user, recipient=our_user) |
+            Q(sender=our_user, recipient=user)
+        ).order_by("created_at")
 
-    def get(self, request, username):
-        return self.list(request)
+    def get(self, request, *args, **kwargs):
+        return self.list(request,  *args, **kwargs)
