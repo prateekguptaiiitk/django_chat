@@ -26,8 +26,8 @@ class MessageList(mixins.ListModelMixin, generics.GenericAPIView):
     serializer_class = MessageSerializer
 
     def get_queryset(self):
-        username = self.kwargs['username']
-        user = get_object_or_404(User, username=username)
+        user_id = self.kwargs['id']
+        user = get_object_or_404(User, id=user_id)
         our_user = self.request.user
 
         if user == our_user:
