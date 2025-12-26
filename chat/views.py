@@ -33,7 +33,6 @@ class MessageList(mixins.ListModelMixin, generics.GenericAPIView):
         if user == our_user:
             return Message.objects.none()
 
-        print('user', user, 'our_user', our_user)
         return Message.objects.filter(
             Q(sender=user, recipient=our_user) |
             Q(sender=our_user, recipient=user)
