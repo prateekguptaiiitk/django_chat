@@ -9,11 +9,15 @@ https://docs.djangoproject.com/en/6.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
+import os
+from dotenv import load_dotenv
 from datetime import timedelta
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+load_dotenv(BASE_DIR / ".env")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
@@ -22,11 +26,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-3cm0ok+1_7)67ijla7@8^zb+713%cp-+)pyxa!=ly^05abffer'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 # If DEBUG is true Access-Control-Allow-Origin will be added to headers in response
-CORS_ORIGIN_ALLOW_ALL = DEBUG
-CORS_ALLOW_CREDENTIALS = DEBUG
+CORS_ORIGIN_ALLOW_ALL = True #DEBUG
+CORS_ALLOW_CREDENTIALS = True #DEBUG
 
 # # Required for cross-origin cookies (React ↔ Django)
 # SESSION_COOKIE_SAMESITE = 'None'
@@ -39,7 +43,7 @@ CORS_ALLOW_CREDENTIALS = DEBUG
 #     "http://localhost:5173",
 # ]
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['django-chat-k29a.onrender.com', 'localhost', '127.0.0.1']
 
 # Application definition
 
@@ -108,14 +112,26 @@ SIMPLE_JWT = {
 #     },
 # }
 
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {
-            "hosts": [("127.0.0.1", 6379)],
+VALKEY_URL = os.getenv("VALKEY_URL")
+
+if DEBUG:
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels_redis.core.RedisChannelLayer",
+            "CONFIG": {
+                "hosts": [("127.0.0.1", 6379)],
+            },
         },
-    },
-}
+    }
+else:
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels_redis.core.RedisChannelLayer",
+            "CONFIG": {
+                "hosts": [VALKEY_URL],
+            },
+        },
+    }
 
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
