@@ -1,3 +1,6 @@
+from datetime import timedelta
+
+from django.utils import timezone
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions, status
@@ -56,12 +59,36 @@ class LogoutAPIView(APIView):
 
     def post(self, request):
         refresh_token = request.COOKIES.get('refresh')
-        token = RefreshToken(refresh_token)
-        token.blacklist()
+
+        if refresh_token:
+            try:
+                token = RefreshToken(refresh_token)
+                token.blacklist()
+            except Exception:
+                pass
 
         response = Response({"message": "Logged out"})
-        response.delete_cookie('access')
-        response.delete_cookie('refresh')
+
+        response.set_cookie(
+            key="access",
+            value="",
+            expires=timezone.now() - timedelta(days=1),
+            httponly=True,
+            secure=True,
+            samesite="None",
+            path="/",
+        )
+
+        response.set_cookie(
+            key="refresh",
+            value="",
+            expires=timezone.now() - timedelta(days=1),
+            httponly=True,
+            secure=True,
+            samesite="None",
+            path="/",
+        )
+
         return response
 
 class ProfileAPIView(APIView):
