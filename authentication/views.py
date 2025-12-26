@@ -106,14 +106,23 @@ class CookieTokenRefreshView(TokenRefreshView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request, *args, **kwargs):
-        request.data['refresh'] = request.COOKIES.get('refresh')
-        response = super().post(request, *args, **kwargs)
+        refresh = request.COOKIES.get("refresh")
 
+        if not refresh:
+            return Response({"detail": "No refresh token"}, status=401)
+
+        serializer = self.get_serializer(data={"refresh": refresh})
+        serializer.is_valid(raise_exception=True)
+
+        access = serializer.validated_data["access"]
+
+        response = Response({"access": "refreshed"})
         response.set_cookie(
-            'access',
-            response.data['access'],
+            "access",
+            access,
             httponly=True,
             secure=True,
-            samesite='Lax'
+            samesite="None",
+            path="/",
         )
         return response
