@@ -117,9 +117,12 @@ class PresenceConsumer(AsyncWebsocketConsumer):
         data = json.loads(text_data)
         if data.get("type") == "ping":
             await self.mark_alive()
+            await self.broadcast()
 
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard("presence", self.channel_name)
+        await self.mark_offline()
+        await self.broadcast()
 
     async def mark_alive(self):
         users = cache.get(ONLINE_KEY, {})
@@ -133,20 +136,22 @@ class PresenceConsumer(AsyncWebsocketConsumer):
         users = cache.get(ONLINE_KEY, {})
         now = timezone.now()
 
-        online = []
+        online = {}
         for uid, info in users.items():
             last_seen = timezone.datetime.fromisoformat(info["last_seen"])
             if (now - last_seen).total_seconds() < TIMEOUT_SECONDS:
-                online.append({
-                    "userId": uid,
-                    "username": info["username"]
-                })
+                online[uid] = info
+
+        cache.set(ONLINE_KEY, online)  # 🔥 cleanup stale users
 
         await self.channel_layer.group_send(
             "presence",
             {
                 "type": "presence.update",
-                "online": online
+                "online": [
+                    {"userId": uid, "username": info["username"]}
+                    for uid, info in online.items()
+                ]
             }
         )
 
@@ -154,3 +159,8 @@ class PresenceConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps({
             "online": event["online"]
         }))
+
+    async def mark_offline(self):
+        users = cache.get(ONLINE_KEY, {})
+        users.pop(str(self.user.id), None)
+        cache.set(ONLINE_KEY, users)
